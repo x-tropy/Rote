@@ -2,12 +2,17 @@ import type { LinksFunction } from "@remix-run/node"
 import { Links, Meta, Outlet, Scripts, ScrollRestoration } from "@remix-run/react"
 
 // 🧠 the '?url' suffix is crucial!
-import styles from "/styles/tailwind.css?url"
+import tailwind from "/styles/tailwind.css?url"
+import blueprint from "/styles/blueprint.css?url"
 
 export const links: LinksFunction = () => [
 	{
 		rel: "stylesheet",
-		href: styles
+		href: tailwind
+	},
+	{
+		rel: "stylesheet",
+		href: blueprint
 	}
 ]
 
