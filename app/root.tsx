@@ -1,6 +1,7 @@
 import type { LinksFunction } from "@remix-run/node"
 import { Links, Meta, Outlet, Scripts, ScrollRestoration } from "@remix-run/react"
 
+// 🧠 the '?url' suffix is crucial!
 import styles from "/styles/tailwind.css?url"
 
 export const links: LinksFunction = () => [
@@ -22,6 +23,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 			<body>
 				{children}
 				<ScrollRestoration />
+				{/* 🔥 LiveReload is not needed anymore */}
 				<Scripts />
 			</body>
 		</html>
