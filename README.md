@@ -1,41 +1,29 @@
-# Welcome to Remix!
+# Remix boilerplate code
 
-- [Remix Docs](https://remix.run/docs)
+## Database
 
-## Fly Setup
+### Initialize
 
-1. [Install `flyctl`](https://fly.io/docs/getting-started/installing-flyctl/)
+`npx prisma init --datasource-provider sqlite`
 
-2. Sign up and log in to Fly
+### Seeding
 
-```sh
-flyctl auth signup
+1. Open the package.json of your project
+2. Add the following example to it:
+
+```
+"prisma": {
+  "seed": "ts-node prisma/seed.ts"
+}
 ```
 
-3. Setup Fly. It might ask if you want to deploy, say no since you haven't built the app yet.
+If you are using ESM (ECMAScript modules):
 
-```sh
-flyctl launch
+```
+"prisma": {
+  "seed": "ts-node --require tsconfig-paths/register prisma/seed.ts"
+}
 ```
 
-## Development
-
-From your terminal:
-
-```sh
-npm run dev
-```
-
-This starts your app in development mode, rebuilding assets on file changes.
-
-## Deployment
-
-If you've followed the setup instructions already, all you need to do is run this:
-
-```sh
-npm run deploy
-```
-
-You can run `flyctl info` to get the url and ip address of your server.
-
-Check out the [fly docs](https://fly.io/docs/getting-started/node/) for more information.
+3. Install the required dependencies by running:
+   npm i -D ts-node tsconfig-paths
