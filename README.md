@@ -9,21 +9,15 @@
 ### Seeding
 
 1. Open the package.json of your project
-2. Add the following example to it:
+
+2. Install the required dependencies by running:
+   `npm i -D tsx`
+3. Add the following example to it:
 
 ```
 "prisma": {
-  "seed": "ts-node prisma/seed.ts"
+  "seed": "tsx prisma/seed.ts"
 }
 ```
 
-If you are using ESM (ECMAScript modules):
-
-```
-"prisma": {
-  "seed": "ts-node --require tsconfig-paths/register prisma/seed.ts"
-}
-```
-
-3. Install the required dependencies by running:
-   npm i -D ts-node tsconfig-paths
+Seeding process automatically start with first migration.
