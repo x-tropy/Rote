@@ -1,0 +1,47 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String       @id @default(cuid())
+  collections  Collection[]
+  tags         Tag[]
+  passwordHash String
+  name         String
+}
+
+model Memo {
+  id          Int          @id @default(autoincrement())
+  createdAt   DateTime     @default(now())
+  updateAt    DateTime     @updatedAt
+  title       String
+  content     String
+  tags        Tag[]
+  ripeness    String       @default("GREEN") // GREEN, HALF, FULL, ROTTEN, ROTTEN2, ROTTEN3
+  collections Collection[]
+}
+
+model Tag {
+  id     Int     @id @default(autoincrement())
+  name   String  @unique
+  aliase String?
+  memos  Memo[]
+  author User?   @relation(fields: [userId], references: [id])
+  userId String?
+}
+
+model Collection {
+  id     Int     @id @default(autoincrement())
+  name   String  @unique
+  author User?   @relation(fields: [userId], references: [id])
+  userId String?
+  memos  Memo[]
+}
