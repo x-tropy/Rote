@@ -1,4 +1,5 @@
 import { PrismaClient } from "@prisma/client"
+import bcrypt, { hash } from "bcrypt"
 
 const db = new PrismaClient()
 
@@ -14,33 +15,44 @@ async function seed() {
 		})
 	)
 
+	await db.user.create({
+		data: getUser()
+	})
+
+	const userId = await db.user
+		.findFirst({
+			where: {
+				name: "admin"
+			}
+		})
+		.then(user => user?.id)
+
 	await Promise.all(
 		getCollections().map(collection => {
 			return db.collection.create({
 				data: {
 					name: collection.name,
+					tags: {
+						connectOrCreate: collection.tags.map(tag => {
+							return {
+								where: { name: tag.name },
+								create: {
+									name: tag.name,
+									aliase: tag.aliase
+								}
+							}
+						})
+					},
 					memos: {
 						create: collection.memos.map(memo => {
 							return {
 								title: memo.title,
-								content: memo.content,
-								tags: {
-									connectOrCreate: memo.tags.map(tag => {
-										return {
-											where: {
-												// ※ 对应到 Schema 定义中 name 必须 unique
-												name: tag.name
-											},
-											create: {
-												name: tag.name,
-												aliase: tag.aliase
-											}
-										}
-									})
-								}
+								cue: memo.cue,
+								answer: memo.answer
 							}
 						})
-					}
+					},
+					userId
 				}
 			})
 		})
@@ -68,6 +80,10 @@ function getTags() {
 		{
 			name: "high-frequency",
 			aliase: "🔥"
+		},
+		{
+			name: "important",
+			aliase: "⚠"
 		}
 	]
 }
@@ -76,61 +92,66 @@ function getCollections() {
 	return [
 		{
 			name: "German1000",
+			tags: [
+				{
+					name: "german",
+					aliase: "🇩🇪"
+				},
+				{
+					name: "high-frequency"
+					// aliase: "🔥"
+				}
+			],
 			memos: [
 				{
 					title: "Wie",
-					content: "What",
-					tags: [
-						{
-							name: "german",
-							aliase: "🇩🇪"
-						}
-					]
+					cue: "a common german word",
+					answer: "What"
 				},
 				{
 					title: "Woher",
-					content: "Where",
-					tags: [
-						{
-							name: "german",
-							aliase: "🇩🇪"
-						},
-						{
-							name: "high-frequency",
-							aliase: "🔥"
-						}
-					]
+					answer: "Where"
 				}
 			]
 		},
 		{
 			name: "English1000",
+			tags: [
+				{
+					name: "english",
+					aliase: "🇬🇧"
+				},
+				{
+					name: "high-frequency",
+					aliase: "🔥"
+				}
+			],
 			memos: [
 				{
 					title: "What",
-					content: "什么",
-					tags: [
-						{
-							name: "english",
-							aliase: "🇬🇧"
-						},
-						{
-							name: "high-frequency",
-							aliase: "🔥"
-						}
-					]
+					cue: "a often used word",
+					answer: "什么"
 				},
 				{
 					title: "Where",
-					content: "在哪里",
-					tags: [
-						{
-							name: "english",
-							aliase: "🇬🇧"
-						}
-					]
+					answer: "在哪里"
 				}
 			]
 		}
 	]
+}
+
+function getUser() {
+	const name = "admin"
+	const passwordHash = hashPassword("123456")
+	console.log("\n>>>>>>>>\n", { passwordHash }, "\n<<<<<<<<\n")
+	return {
+		name,
+		passwordHash
+	}
+}
+
+function hashPassword(password: string) {
+	const saltRounds = 10
+	return bcrypt.hashSync(password, saltRounds)
 }
