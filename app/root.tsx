@@ -25,7 +25,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
 				<Meta />
 				<Links />
 			</head>
-			<body>
+			{/* Apply lavendar background color with a repeated pattern */}
+			<body className="bg-[#c3a2db] bg-repeat bg-[url('/img/pattern.svg')]">
 				{children}
 				<ScrollRestoration />
 				{/* 🔥 LiveReload is not needed anymore */}
