@@ -15,17 +15,9 @@ async function seed() {
 		})
 	)
 
-	await db.user.create({
+	const adminUser = await db.user.create({
 		data: getUser()
 	})
-
-	const userId = await db.user
-		.findFirst({
-			where: {
-				name: "admin"
-			}
-		})
-		.then(user => user?.id)
 
 	await Promise.all(
 		getCollections().map(collection => {
@@ -52,7 +44,7 @@ async function seed() {
 							}
 						})
 					},
-					userId
+					userId: adminUser.id
 				}
 			})
 		})
