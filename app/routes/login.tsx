@@ -29,7 +29,12 @@ export default function Login() {
 	console.log("\n>>>>>>>>\n", { data }, "\n<<<<<<<<\n")
 
 	return (
-		<Card elevation={Elevation.TWO} className='w-[400px] mx-auto mt-6'>
+		<Card elevation={Elevation.TWO} className='w-[400px] mx-auto mt-8'>
+			<img src='/img/logo-rote.png' alt='logo' width={150} className='mx-auto mt-6 mb-1' />
+			<p className='text-center text-sm italic text-slate-400 mb-10'>
+				Benefit from the beauty of <span className='underline font-bold'>repetition</span>!
+			</p>
+
 			{/* Existing user */}
 			<Form method='post'>
 				<FormGroup label='User name' labelFor='name'>
