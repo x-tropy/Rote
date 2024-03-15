@@ -14,6 +14,8 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 	const password = String(form.get("password"))
 	const userCredentials = await login({ name, password })
 
+	console.log("\n>>>>>>>>\n", { userCredentials }, "\n<<<<<<<<\n")
+
 	// 🥅 Fail to login
 	if (!userCredentials) {
 		return badRequest(
@@ -29,7 +31,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 		)
 	}
 
-	return createUserSession(userCredentials.id, "/")
+	return createUserSession(userCredentials.id, "/collections")
 }
 
 export default function Login() {

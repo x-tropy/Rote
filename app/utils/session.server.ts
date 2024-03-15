@@ -1,6 +1,6 @@
 import { redirect, createCookieSessionStorage } from "@remix-run/node"
 import { db } from "./db.server"
-import bcrypt from "bcrypt"
+import bcrypt from "bcryptjs"
 
 // 📝 create cookie session
 const SESSION_SECRET = process.env.SESSION_SECRET
@@ -20,7 +20,7 @@ const sessionStorage = createCookieSessionStorage({
 	}
 })
 
-// 🚩 Handle user login, shall be used by 📃 Login page
+// 🚩 Handle user login, shall be used by 📜 Login page
 export async function createUserSession(userId: string, redirectTo: string) {
 	const session = await sessionStorage.getSession()
 	session.set("userId", userId)
@@ -29,6 +29,37 @@ export async function createUserSession(userId: string, redirectTo: string) {
 			"Set-Cookie": await sessionStorage.commitSession(session)
 		}
 	})
+}
+
+/* ※ Extract user id from session */
+function getUserSession(request: Request) {
+	return sessionStorage.getSession(request.headers.get("Cookie"))
+}
+
+export async function getUserId(request: Request) {
+	const session = await getUserSession(request)
+	const userId = session.get("userId")
+	if (!userId || typeof userId !== "string") {
+		return null
+	}
+	return userId
+}
+
+/* 
+	※ Redirect to 📜 login page, if user id is not found. 
+	※ Will finally come back with valid user id.
+*/
+export async function requireUserId(request: Request, redirectTo: string = new URL(request.url).pathname) {
+	const session = await getUserSession(request)
+	const userId = session.get("userId")
+	if (!userId || typeof userId !== "string") {
+		/*※ The tail, telling where am I from 
+			※ Throw it, don't return!
+		*/
+		throw redirect(`/login?redirectTo=${new URLSearchParams([["redirectTo", redirectTo]])}`)
+	}
+
+	return userId
 }
 
 type LoginForm = {
