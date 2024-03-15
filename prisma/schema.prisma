@@ -42,7 +42,7 @@ model Memo {
   title        String
   cue          String?
   answer       String
-  collections  Collection @relation(fields: [collectionId], references: [id])
+  collection   Collection @relation(fields: [collectionId], references: [id])
   collectionId Int
   progress     Progress?
 }
