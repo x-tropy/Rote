@@ -2,7 +2,8 @@ import { FormGroup, InputGroup, Tooltip, Button, Card, Elevation, Checkbox, Anch
 import { ActionFunctionArgs } from "@remix-run/node"
 import { Form, Link, json, useActionData } from "@remix-run/react"
 import { useState } from "react"
-import { login } from "~/utils/session.server"
+import { badRequest } from "~/utils/request.server"
+import { login, createUserSession } from "~/utils/session.server"
 
 export const action = async ({ request }: ActionFunctionArgs) => {
 	const form = await request.formData()
@@ -12,7 +13,23 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 	const name = String(form.get("name"))
 	const password = String(form.get("password"))
 	const userCredentials = await login({ name, password })
-	return json({ msg: userCredentials ? "Login successful" : "Invalid user", userCredentials })
+
+	// 🥅 Fail to login
+	if (!userCredentials) {
+		return badRequest(
+			{
+				fieldErrors: null,
+				fields: {
+					name,
+					password
+				},
+				formError: "User name & password do not match"
+			},
+			400
+		)
+	}
+
+	return createUserSession(userCredentials.id, "/")
 }
 
 export default function Login() {

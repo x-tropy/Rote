@@ -21,3 +21,11 @@
 ```
 
 Seeding process automatically start with first migration.
+
+### Singleton
+
+We should run only 1 instance of `PrismaClient`
+
+## User authentication
+
+### Cookie
