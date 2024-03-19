@@ -65,7 +65,7 @@ export async function getUserId(request: Request) {
 */
 export async function requireUserId(request: Request, redirectTo: string = new URL(request.url).pathname) {
 	const session = await getUserSession(request)
-	const userId = session.get("userId")
+	const userId = session?.get("userId") || null
 	if (!userId || typeof userId !== "string") {
 		/*※ The tail, telling where am I from 
 			※ Throw it, don't return!
@@ -104,7 +104,10 @@ export async function login({ name, password }: LoginForm) {
 
 /* Hanlde logout, destroy user session */
 export async function logout(request: Request) {
-	const session = await getUserSession(request)
+	const session = (await getUserSession(request)) || null
+	if (!session) {
+		return redirect("/login")
+	}
 	return redirect("/login", {
 		headers: {
 			"Set-Cookie": await sessionStorage.destroySession(session)
