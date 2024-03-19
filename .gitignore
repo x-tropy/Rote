@@ -7,3 +7,4 @@ node_modules
 dev.db
 migration_lock.toml
 migration.sql
+.DS_Store
