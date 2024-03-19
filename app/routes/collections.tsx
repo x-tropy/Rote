@@ -2,22 +2,24 @@ import { LoaderFunctionArgs, json } from "@remix-run/node"
 import { getUserId } from "~/utils/session.server"
 import { db } from "~/utils/db.server"
 import { Outlet, useLoaderData } from "@remix-run/react"
-import invariant from "tiny-invariant"
-import { Card } from "@blueprintjs/core"
+import { Main } from "~/components/Container"
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
 	const userId = await getUserId(request)
-	invariant(userId, "The user id must be present")
+	if (!userId) {
+		return json({ noAccess: true, collections: [] }, { status: 401 })
+	}
+
 	const collections = await db.collection.findMany({
 		where: { userId }
 	})
-	return json({ collections })
+	return json({ collections, noAccess: false })
 }
 
 export default function DisplayCollectionsRoute() {
-	const { collections } = useLoaderData<typeof loader>()
+	const { collections, noAccess } = useLoaderData<typeof loader>()
 	return (
-		<Card className='mt-8 w-[700px] mx-auto'>
+		<Main noAccess={noAccess}>
 			<h1>Your Collections</h1>
 			<ul>
 				{collections.map(collection => (
@@ -27,6 +29,6 @@ export default function DisplayCollectionsRoute() {
 				))}
 			</ul>
 			<Outlet />
-		</Card>
+		</Main>
 	)
 }
