@@ -3,16 +3,27 @@ import { Link } from "@remix-run/react"
 import React, { ReactNode } from "react"
 
 interface MainContainerProps {
-	children: ReactNode
+	children: ReactNode[]
 	noAccess?: boolean
 	columns?: number
 }
 
+const CLASS_SINGLE_COLUMN = "my-20 mx-auto w-[700px]"
+const CLASS_TWO_COLUMNS = "my-20 mx-auto w-[800px] grid grid-cols-2 gap-4"
+
 export const Main: React.FC<MainContainerProps> = ({ children, noAccess, columns = 1 }) => {
-	return (
-		<Card className='my-20 mx-auto w-[700px]' elevation={Elevation.TWO}>
+	return noAccess || columns === 1 ? (
+		<Card className={CLASS_SINGLE_COLUMN} elevation={Elevation.TWO}>
 			{!noAccess ? children : NoAccessState}
 		</Card>
+	) : (
+		<div className={CLASS_TWO_COLUMNS}>
+			{children.map((child, index) => (
+				<Card key={index} elevation={Elevation.TWO}>
+					{child}
+				</Card>
+			))}
+		</div>
 	)
 }
 
