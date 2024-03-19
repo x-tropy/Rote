@@ -7,14 +7,10 @@ import { login, createUserSession } from "~/utils/session.server"
 
 export const action = async ({ request }: ActionFunctionArgs) => {
 	const form = await request.formData()
-	for (const iterator of form) {
-		console.log("\n>>>>>>>>\n", { iterator }, "\n<<<<<<<<\n")
-	}
 	const name = String(form.get("name"))
 	const password = String(form.get("password"))
+	const rememberMe = form.get("rememberMe") === "on"
 	const userCredentials = await login({ name, password })
-
-	console.log("\n>>>>>>>>\n", { userCredentials }, "\n<<<<<<<<\n")
 
 	// 🥅 Fail to login
 	if (!userCredentials) {
@@ -31,7 +27,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 		)
 	}
 
-	return createUserSession(userCredentials.id, "/collections")
+	return createUserSession(userCredentials.id, "/collections", rememberMe ? true : false)
 }
 
 export default function Login() {
@@ -45,10 +41,9 @@ export default function Login() {
 
 	// Handle submission feedback
 	const data = useActionData<typeof action>()
-	console.log("\n>>>>>>>>\n", { data }, "\n<<<<<<<<\n")
 
 	return (
-		<Card elevation={Elevation.TWO} className='w-[400px] mx-auto mt-8'>
+		<Card elevation={Elevation.TWO} className='w-[400px] mx-auto my-20'>
 			<img src='/img/logo-rote.png' alt='logo' width={150} className='mx-auto mt-6 mb-1' />
 			<p className='text-center text-sm italic text-slate-400 mb-10'>
 				Benefit from the beauty of <span className='underline font-bold'>repetition</span>!
