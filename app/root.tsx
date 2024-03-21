@@ -4,7 +4,7 @@ import { Link, Links, Meta, NavLink, Outlet, Scripts, ScrollRestoration, json, u
 // 🧠 the '?url' suffix is crucial!
 import tailwind from "/styles/tailwind.css?url"
 import blueprint from "/styles/blueprint.css?url"
-import { Navbar, Alignment, Button } from "@blueprintjs/core"
+import { Navbar, Alignment, Button, FocusStyleManager } from "@blueprintjs/core"
 import { getUserId } from "./utils/session.server"
 import type { LoaderFunctionArgs } from "@remix-run/node"
 
@@ -26,7 +26,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 
 export function Layout({ children }: { children: React.ReactNode }) {
 	const { userId } = useLoaderData<typeof loader>()
-	console.log("\n>>>>>>>>\n", { userId }, "\n<<<<<<<<\n")
+	FocusStyleManager.onlyShowFocusOnTabs()
 	return (
 		<html lang='en'>
 			<head>
@@ -47,6 +47,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 							{({ isActive, isPending }) => <Button minimal loading={isPending} intent={isActive ? "primary" : undefined} icon='new-grid-item' text='My Collections' />}
 						</NavLink>
 						<NavLink to='/achievement'>{({ isActive, isPending }) => <Button minimal loading={isPending} intent={isActive ? "primary" : undefined} icon='star' text='Achievement' />}</NavLink>
+						<NavLink to='/new'>{({ isActive, isPending }) => <Button minimal loading={isPending} intent={isActive ? "primary" : undefined} icon='insert' text='Create' />}</NavLink>
 						<NavLink to='/discover'>{({ isActive, isPending }) => <Button minimal loading={isPending} intent={isActive ? "primary" : undefined} icon='shop' text='Discover' />}</NavLink>
 					</Navbar.Group>
 					<Navbar.Group align={Alignment.RIGHT}>
