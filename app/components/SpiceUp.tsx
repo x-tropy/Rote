@@ -85,3 +85,5 @@ export const NoAccessState = (
 		}
 	/>
 )
+
+export const Asterisk = <span className='text-red-500 font-mono'>*</span>
