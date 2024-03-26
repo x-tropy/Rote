@@ -2,6 +2,11 @@ import { useState } from "react"
 import { MenuItem } from "@blueprintjs/core"
 import { MultiSelect, type ItemRendererProps } from "@blueprintjs/select"
 
+type MenuItem = {
+	name: string
+	value: string | number | boolean
+}
+
 type MyMultiSelectProps = {
 	menuItems: string[]
 	name: string
@@ -9,9 +14,10 @@ type MyMultiSelectProps = {
 	placeholder?: string
 	icon?: string
 	disabled?: boolean
+	shouldDismissPopover?: boolean
 }
 
-export function MyMultiSelect({ menuItems, name, placeholder, icon, allowCreate, disabled }: MyMultiSelectProps) {
+export function MyMultiSelect({ menuItems, name, placeholder, icon, allowCreate, disabled, shouldDismissPopover = false }: MyMultiSelectProps) {
 	const [selectedItems, setSelectedItems] = useState([] as string[])
 	const isItemSelected = (tag: string) => selectedItems.includes(tag)
 	function getTagItemProps(tag: string, { handleClick, handleFocus, modifiers, query, ref }: ItemRendererProps) {
@@ -41,7 +47,7 @@ export function MyMultiSelect({ menuItems, name, placeholder, icon, allowCreate,
 					handleClick(e)
 					setSelectedItems([...selectedItems, ...newTags])
 				}}
-				shouldDismissPopover={false}
+				shouldDismissPopover={!!shouldDismissPopover}
 			/>
 		)
 	}
@@ -60,13 +66,16 @@ export function MyMultiSelect({ menuItems, name, placeholder, icon, allowCreate,
 					if (!props.modifiers.matchesPredicate) {
 						return null
 					}
-					return <MenuItem {...getTagItemProps(tag, props)} roleStructure='none' text={tag} key={tag} icon={isItemSelected(tag) ? "small-tick" : "blank"} shouldDismissPopover={false} />
+					return (
+						<MenuItem {...getTagItemProps(tag, props)} roleStructure='none' text={tag} key={tag} icon={isItemSelected(tag) ? "small-tick" : "blank"} shouldDismissPopover={!!shouldDismissPopover} />
+					)
 				}}
 				onRemove={tag => {
 					setSelectedItems(selectedItems.filter(item => item !== tag))
 				}}
 				onClear={() => setSelectedItems([])}
 				onItemSelect={tag => {
+					console.log("\n>>>>>>>>\n", { selectedItems }, "\n<<<<<<<<\n")
 					if (!isItemSelected(tag)) {
 						setSelectedItems([...selectedItems, tag])
 					} else {
