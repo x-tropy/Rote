@@ -1,66 +1,39 @@
-import { ActionFunctionArgs, redirect } from "@remix-run/node"
+import { ActionFunctionArgs, LoaderFunctionArgs, json, redirect } from "@remix-run/node"
 import { db } from "~/utils/db.server"
 import { badRequest } from "~/utils/request.server"
-import { requireUserId } from "~/utils/session.server"
+import { getUserId, requireUserId } from "~/utils/session.server"
 import invariant from "tiny-invariant"
-import { Form } from "@remix-run/react"
-import { Button, FormGroup, Icon, InputGroup, TextArea, Switch, Divider } from "@blueprintjs/core"
+import { Form, useLoaderData } from "@remix-run/react"
+import { Button, FormGroup, Icon, InputGroup, TextArea, Switch } from "@blueprintjs/core"
 import { useState } from "react"
-import * as React from "react"
 import { Main } from "~/components/Container"
 import { MyMultiSelect } from "~/components/ReceiveInput"
+import { Asterisk } from "~/components/SpiceUp"
+import { parseMarkdown, type ParsedMarkdown } from "~/utils/algorithm"
 
-function parseMarkdown(content: string) {
-	const parts = content.split("\n## ")
-	// A collection must have at least one memo
-	if (parts.length < 2) {
-		return null
+/****************
+ * LOADER
+ ****************/
+export async function loader({ request }: LoaderFunctionArgs) {
+	const userId = await getUserId(request)
+	if (!userId) {
+		return json({ tags: [], studyMates: [], noAccess: true }, { status: 401 })
 	}
-	const rawFrontMatterAndName = parts[0]
-	const rawMemos = parts.slice(1)
 
-	const tagsRegex = /[Tt]ag[s]?:\s*(.*)\s*/
-	const tagsMatch = rawFrontMatterAndName.match(tagsRegex)
-	const tags = tagsMatch ? tagsMatch[1].split(",").map(tag => tag.trim()) : []
-
-	const titleRegex = /^#\s*(.*)$/m
-	const titleMatch = rawFrontMatterAndName.match(titleRegex)
-	const collectionName = titleMatch ? titleMatch[1].trim() : ""
-
-	const memos = rawMemos.map(rawMemo => {
-		const memoParts = rawMemo.split("\n")
-		const memoTitle = memoParts[0]
-		const memoContent = memoParts.slice(1).join("\n")
-
-		// memoContent must not be empty
-		if (memoContent.trim().length === 0) {
-			return null
-		}
-		const horizontalRuleRegex = /^(?:-{3,})$/gm
-		const [cue, answer] = memoContent.split(horizontalRuleRegex)
-
-		// No horizontal rule
-		if (!cue && !answer) {
-			return { memoTitle, answer: memoContent, cue: "" }
-		}
-
-		// A memo may only have an answer and no cue
-		if (!cue && answer) {
-			return { memoTitle, answer: cue, cue: "" }
-		}
-
-		return { memoTitle, cue, answer }
+	// get all tags created by the user
+	const tags = await db.tag.findMany({
+		select: { name: true }
 	})
 
-	// A collection must have at least one memo
-	if (memos.every(memo => memo === null)) {
-		return null
-	}
+	// get all users except the current user
+	const studyMates = await db.user.findMany({
+		where: { id: { not: userId } },
+		select: { name: true, id: true }
+	})
 
-	return { collectionName, tags, memos }
+	return json({ tags, studyMates, noAccess: false })
 }
 
-type ParsedMarkdown = ReturnType<typeof parseMarkdown>
 let parsed: ParsedMarkdown
 
 function validateContent(name: string, content: string) {
@@ -77,55 +50,76 @@ function validateContent(name: string, content: string) {
 	return null
 }
 
-// ✨TODO: add share to study mate feature
+/****************
+ * ACTION
+ ****************/
 export async function action({ request }: ActionFunctionArgs) {
-	const userId = await requireUserId(request)
-	invariant(userId, "The user id must be present")
-
 	const formData = await request.formData()
 	const name = formData.get("name")
 	const content = formData.get("content")
 	const tags = formData.get("tags")
-	if (typeof name !== "string" || typeof content !== "string") {
+	const studyMates = formData.get("studyMates")
+
+	// Form validation
+	if (typeof name !== "string" || typeof content !== "string" || typeof tags !== "string" || typeof studyMates !== "string") {
 		return badRequest({
 			fieldErrors: null,
 			fields: null,
 			formError: "Invalid form data"
 		})
 	}
+
+	// Field validation
 	const fieldErrors = {
 		content: validateContent(name, content)
 	}
 	const fields = { name, content }
-
-	// Validation failed
 	if (Object.values(fieldErrors).some(Boolean)) {
 		return badRequest({ fieldErrors, fields, formError: null })
 	}
 	invariant(parsed, "The parsed markdown must be present")
 
+	// Prepare data
+	const selectedTags = tags.split(",").map(tag => tag.trim())
+	const mergedTags = Array.from(new Set([...selectedTags, ...parsed.tags]))
+	const collectionName = name || parsed.collectionName
+	const studyMateNames = studyMates.split(",").map(studyMate => studyMate.trim())
+	const studyMateIds = await db.user.findMany({
+		where: { name: { in: studyMateNames } },
+		select: { id: true }
+	})
+
 	// Save to database
-	// const collection = await db.collection.create({
-	// 	data: {
-	// 		userId,
-	// 		name: parsed.collectionName && name,
-	// 		tags: {
-	// 			connectOrCreate: parsed.tags.map(tag => ({ create: { name: tag }, where: { name: tag } }))
-	// 		},
-	// 		memos: {
-	// 			create: parsed.memos.map(memo => ({
-	// 				title: memo ? memo.memoTitle : "",
-	// 				cue: memo ? memo.cue : "",
-	// 				answer: memo ? memo.answer : ""
-	// 			}))
-	// 		}
-	// 	}
-	// })
-	// return redirect(`/collections/${collection.id}`)
+	const userId = await requireUserId(request)
+	const collection = await db.collection.create({
+		data: {
+			userId,
+			name: collectionName,
+			tags: {
+				connectOrCreate: mergedTags.map(tag => ({ create: { name: tag }, where: { name: tag } }))
+			},
+			accesses: {
+				create: studyMateIds.map(studyMateId => ({ userId: studyMateId.id }))
+			},
+			memos: {
+				create: parsed.memos.map(memo => ({
+					title: memo ? memo.memoTitle : "",
+					cue: memo ? memo.cue : "",
+					answer: memo ? memo.answer : ""
+				}))
+			}
+		}
+	})
+	return redirect(`/collections/${collection.id}`)
 }
 
+/****************
+ * COMPONENT
+ ****************/
 export default function NewCollectionRoute() {
-	const asterisk = <span className='text-red-500 font-mono'>*</span>
+	const { tags, studyMates, noAccess } = useLoaderData<typeof loader>()
+	const tagItems = tags.map(tag => tag.name)
+	const studyMateItems = studyMates.map(user => user.name)
 	const contentPlaceholder = `Use markdown to create your collection. For example:
 
 # Collection name
@@ -137,7 +131,7 @@ Cue
 ---
 
 Answer
-	`
+`
 
 	// Access control
 	const [checked, setChecked] = useState(false)
@@ -150,12 +144,12 @@ Answer
 	// Tags
 
 	return (
-		<Main>
-			<h1 className='text-2xl font-semibold text-slate-600 mt-2 mb-4'>Create new collection</h1>
+		<Main noAccess={noAccess}>
+			<h1 className='text-2xl font-semibold text-slate-700 mt-2 mb-4'>Create new collection</h1>
 			<Form
 				method='post'
 				onKeyDown={e => {
-					if (e.key === "Enter") {
+					if (e.key === "Enter" && (e.target as HTMLElement).tagName !== "TEXTAREA") {
 						e.preventDefault() // Prevent unintended form submission
 					}
 				}}
@@ -163,15 +157,15 @@ Answer
 				<FormGroup>
 					<InputGroup placeholder='collection name' leftIcon='git-repo' large name='name' />
 				</FormGroup>
-				<FormGroup label='Memos' labelInfo={asterisk}>
+				<FormGroup label='Memos' labelInfo={Asterisk}>
 					<TextArea onChange={e => handleMemoChange(e.target.value)} required placeholder={contentPlaceholder} name='content' className='w-[100%] min-h-[400px] text-sm' />
 				</FormGroup>
 				<FormGroup label='Tags'>
-					<MyMultiSelect allowCreate icon='tag' menuItems={["tag11", "tag22", "tag33"]} name='tags' placeholder='Add tags' />
+					<MyMultiSelect allowCreate icon='tag' menuItems={tagItems} name='tags' placeholder='add tags' />
 				</FormGroup>
 				<FormGroup>
 					<Switch label='Share with study mates' onChange={e => handleSwitch(e.target.checked)} />
-					<MyMultiSelect allowCreate={false} disabled={!checked} icon='user' menuItems={["Chen", "Liao"]} name='studyMates' placeholder='Add study mates' />
+					<MyMultiSelect allowCreate={false} disabled={!checked} icon='user' menuItems={studyMateItems} name='studyMates' placeholder='add study mates' />
 				</FormGroup>
 				<div className='mt-8 mb-4'>
 					<Button intent='primary' large type='submit' icon='tick'>
