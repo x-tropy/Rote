@@ -19,6 +19,10 @@ async function seed() {
 		data: getUser()
 	})
 
+	const user2 = await db.user.create({
+		data: getUser2()
+	})
+
 	await Promise.all(
 		getCollections().map(collection => {
 			return db.collection.create({
@@ -83,7 +87,7 @@ function getTags() {
 function getCollections() {
 	return [
 		{
-			name: "German1000",
+			name: "G Vocabulary 1000",
 			tags: [
 				{
 					name: "german",
@@ -107,7 +111,7 @@ function getCollections() {
 			]
 		},
 		{
-			name: "English1000",
+			name: "E Vocabulary 1000",
 			tags: [
 				{
 					name: "english",
@@ -136,7 +140,15 @@ function getCollections() {
 function getUser() {
 	const name = "admin"
 	const passwordHash = hashPassword("123456")
-	console.log("\n>>>>>>>>\n", { passwordHash }, "\n<<<<<<<<\n")
+	return {
+		name,
+		passwordHash
+	}
+}
+
+function getUser2() {
+	const name = "Buwei Liao"
+	const passwordHash = hashPassword("123456")
 	return {
 		name,
 		passwordHash
