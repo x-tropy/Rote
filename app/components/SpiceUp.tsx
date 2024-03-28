@@ -19,7 +19,7 @@ export const CardTitle = ({ text, boldText = "", rainbowText = "", className = "
 		highlights.push({ fragment: boldText, style: "font-bold" })
 	}
 	const wrappedText = wrapHighlightsWithSpan(text, highlights)
-	return <h1 className={className + " text-2xl font-regular"} dangerouslySetInnerHTML={{ __html: wrappedText }}></h1>
+	return <h1 className={className + " transition-colors text-2xl font-regular p-1 truncate ..."} dangerouslySetInnerHTML={{ __html: wrappedText }}></h1>
 }
 
 type WrapHighlightsType = {
