@@ -144,8 +144,7 @@ Answer
 	// Tags
 
 	return (
-		<Main noAccess={noAccess}>
-			<h1 className='text-2xl font-semibold text-slate-700 mt-2 mb-4'>Create new collection</h1>
+		<Main noAccess={noAccess} columns={1} layout='flex'>
 			<Form
 				method='post'
 				onKeyDown={e => {
@@ -154,6 +153,7 @@ Answer
 					}
 				}}
 			>
+				<h1 className='text-2xl font-semibold text-slate-700 mt-2 mb-4'>Create new collection</h1>
 				<FormGroup>
 					<InputGroup placeholder='collection name' leftIcon='git-repo' large name='name' />
 				</FormGroup>
