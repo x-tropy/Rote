@@ -3,23 +3,35 @@ import { NoAccessState } from "~/components/SpiceUp"
 import React, { ReactNode } from "react"
 
 interface MainContainerProps {
-	children: ReactNode[]
+	children: ReactNode[] | ReactNode
 	noAccess?: boolean
 	columns?: number
+	layout: "grid" | "flex"
 }
 
-export const Main: React.FC<MainContainerProps> = ({ children, noAccess, columns = 1 }) => {
-	return noAccess || columns === 1 ? (
-		<Card className={"my-20 mx-auto w-[800px]"} elevation={Elevation.TWO}>
-			{!noAccess ? children : NoAccessState}
+function renderChildren(children: ReactNode[] | ReactNode) {
+	if (!children) return null
+	if (!Array.isArray(children)) return <Card elevation={Elevation.TWO}>{children}</Card>
+	return children.map((child, index) => (
+		<Card key={index} elevation={Elevation.TWO}>
+			{child}
 		</Card>
-	) : (
-		<div className={"my-20 mx-auto w-[900px] grid grid-cols-2 gap-4"}>
-			{children.map((child, index) => (
-				<Card key={index} elevation={Elevation.TWO}>
-					{child}
-				</Card>
-			))}
-		</div>
-	)
+	))
+}
+
+function flexWrapper(children: ReactNode[] | ReactNode) {
+	return <div className='my-20 mx-auto w-[700px] flex flex-col space-y-4'>{renderChildren(children)}</div>
+}
+
+export const Main: React.FC<MainContainerProps> = ({ children, noAccess, columns = 1, layout = "grid" }) => {
+	if (noAccess) {
+		return flexWrapper(NoAccessState)
+	}
+	if (layout === "flex") {
+		return flexWrapper(children)
+	}
+
+	if (layout === "grid") {
+		return <div className={`my-20 mx-auto w-[900px] grid grid-cols-${columns} gap-4`}>{renderChildren(children)}</div>
+	}
 }
