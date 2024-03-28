@@ -2,7 +2,7 @@
  * To mark the score of each attempt.
  * 'LevelUp' is an extra score to mark the upgradation of a memo.
  */
-enum Score {
+export enum Score {
 	Perfect = 2,
 	Correct = 1,
 	GaveUp = 0,
@@ -13,7 +13,7 @@ enum Score {
 /**
  * To mark the ripeness of a memo or a collection
  */
-enum Ripeness {
+export enum Ripeness {
 	Seedling,
 	Green,
 	Yellow,
@@ -26,7 +26,7 @@ enum Ripeness {
 /**
  * To mark the status of a collection, and show it in the cover
  */
-enum CollectionStatus {
+export enum CollectionStatus {
 	YetToStart,
 	PracticeMode,
 	ExamMode,
