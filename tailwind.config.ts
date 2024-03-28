@@ -8,6 +8,9 @@ export default {
 	safelist: [
 		{
 			pattern: /(from|via|to)-([a-zA-Z]+)-\d{3}/
+		},
+		{
+			pattern: /grid-cols-\d/
 		}
 	],
 	theme: {
